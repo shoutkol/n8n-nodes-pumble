@@ -20,7 +20,7 @@ export class PumbleApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials.baseUrl}}',
-			url: '/health',
+			url: '/',
 			method: 'GET',
 		},
 	};
