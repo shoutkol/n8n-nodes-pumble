@@ -18,48 +18,21 @@ export class Pumble implements INodeType {
 		defaults: {
 			name: 'Pumble',
 		},
+		credentials: [
+			{
+				name: 'pumbleApi',
+				required: true,
+			},
+		],
 		usableAsTool: true,
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		properties: [
-			// API Key
-			{
-				displayName: 'API Key',
-				name: 'apiKey',
-				type: 'string',
-				typeOptions: { password: true },
-				default: '',
-				required: true,
-				placeholder: 'your-api-key',
-				description: 'The Pumble API key',
-			},
-
-			// Resource
-			{
-				displayName: 'Resource',
-				name: 'resource',
-				type: 'options',
-				options: [
-					{
-						name: 'Message',
-						value: 'message',
-					},
-				],
-				default: 'message',
-				noDataExpression: true,
-				required: true,
-			},
-
 			// Operation
 			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
-				displayOptions: {
-					show: {
-						resource: ['message'],
-					},
-				},
 				options: [
 					{
 						name: 'Send',
@@ -86,12 +59,11 @@ export class Pumble implements INodeType {
 
 			// Send Message Fields
 			{
-				displayName: 'Channel ID',
+				displayName: 'Channel ID (cId)',
 				name: 'sendChannelId',
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['send'],
 					},
 				},
@@ -106,7 +78,6 @@ export class Pumble implements INodeType {
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['send'],
 					},
 				},
@@ -121,12 +92,25 @@ export class Pumble implements INodeType {
 
 			// Reply Message Fields
 			{
-				displayName: 'Message ID',
+				displayName: 'Channel ID (cId)',
+				name: 'replyChannelId',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['reply'],
+					},
+				},
+				default: '',
+				required: true,
+				placeholder: 'C1234567890',
+				description: 'The ID of the channel',
+			},
+			{
+				displayName: 'Message ID (mId)',
 				name: 'replyMessageId',
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['reply'],
 					},
 				},
@@ -141,7 +125,6 @@ export class Pumble implements INodeType {
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['reply'],
 					},
 				},
@@ -161,7 +144,6 @@ export class Pumble implements INodeType {
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['addReaction'],
 					},
 				},
@@ -176,13 +158,12 @@ export class Pumble implements INodeType {
 				type: 'string',
 				displayOptions: {
 					show: {
-						resource: ['message'],
 						operation: ['addReaction'],
 					},
 				},
 				default: '',
 				required: true,
-				placeholder: '👍',
+				placeholder: ':par-shout:',
 				description: 'The emoji to add as a reaction',
 			},
 		],
@@ -191,58 +172,59 @@ export class Pumble implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		const resource = this.getNodeParameter('resource', 0) as string;
+		const credentials = await this.getCredentials('pumbleApi');
 		const operation = this.getNodeParameter('operation', 0) as string;
-		const apiKey = this.getNodeParameter('apiKey', 0) as string;
+		const baseUrl = credentials.baseUrl as string;
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				if (resource === 'message') {
-					if (operation === 'send') {
-						const channelId = this.getNodeParameter('sendChannelId', i) as string;
-						const messageText = this.getNodeParameter('messageText', i) as string;
+				if (operation === 'send') {
+					const channelId = this.getNodeParameter('sendChannelId', i) as string;
+					const messageText = this.getNodeParameter('messageText', i) as string;
 
-						// Mock API call - replace with actual Pumble API call
-						const responseData = {
-							success: true,
-							messageId: `msg_${Date.now()}_${i}`,
+					const response = await this.helpers.httpRequest({
+						method: 'POST',
+						url: `${baseUrl}/postMessage`,
+						body: {
 							channelId,
 							text: messageText,
-							timestamp: new Date().toISOString(),
-							apiKey: apiKey.substring(0, 4) + '****', // Masked for security
-						};
+						},
+						json: true,
+					});
 
-						returnData.push({ json: responseData });
-					} else if (operation === 'reply') {
-						const messageId = this.getNodeParameter('replyMessageId', i) as string;
-						const replyText = this.getNodeParameter('replyText', i) as string;
+					returnData.push({ json: response });
+				} else if (operation === 'reply') {
+					const channelId = this.getNodeParameter('replyChannelId', i) as string;
+					const messageId = this.getNodeParameter('replyMessageId', i) as string;
+					const replyText = this.getNodeParameter('replyText', i) as string;
 
-						// Mock API call - replace with actual Pumble API call
-						const responseData = {
-							success: true,
-							messageId: `msg_${Date.now()}_${i}`,
-							parentMessageId: messageId,
-							text: replyText,
-							timestamp: new Date().toISOString(),
-							apiKey: apiKey.substring(0, 4) + '****', // Masked for security
-						};
-
-						returnData.push({ json: responseData });
-					} else if (operation === 'addReaction') {
-						const messageId = this.getNodeParameter('reactionMessageId', i) as string;
-						const emoji = this.getNodeParameter('emoji', i) as string;
-
-						// Mock API call - replace with actual Pumble API call
-						const responseData = {
-							success: true,
+					const response = await this.helpers.httpRequest({
+						method: 'POST',
+						url: `${baseUrl}/reply`,
+						body: {
+							channelId,
 							messageId,
-							emoji,
-							timestamp: new Date().toISOString(),
-							apiKey: apiKey.substring(0, 4) + '****', // Masked for security
-						};
+							text: replyText,
+						},
+						json: true,
+					});
 
-						returnData.push({ json: responseData });
-					}
+					returnData.push({ json: response });
+				} else if (operation === 'addReaction') {
+					const messageId = this.getNodeParameter('reactionMessageId', i) as string;
+					const emoji = this.getNodeParameter('emoji', i) as string;
+
+					const response = await this.helpers.httpRequest({
+						method: 'POST',
+						url: `${baseUrl}/postReaction`,
+						body: {
+							messageId,
+							code: emoji,
+						},
+						json: true,
+					});
+
+					returnData.push({ json: response });
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {

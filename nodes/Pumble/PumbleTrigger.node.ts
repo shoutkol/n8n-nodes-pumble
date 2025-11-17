@@ -85,65 +85,20 @@ export class PumbleTrigger implements INodeType {
 
 		switch (triggerOn) {
 			case 'messageReceived':
-				if (webhookData.event === 'message' || webhookData.type === 'message') {
-					// If channelId filter is set, check if it matches
-					if (
-						!channelId ||
-						webhookData.channelId === channelId ||
-						webhookData.channel_id === channelId
-					) {
-						shouldTrigger = true;
-						outputData = {
-							eventType: 'message',
-							messageId: webhookData.messageId || webhookData.message_id || webhookData.id,
-							channelId: webhookData.channelId || webhookData.channel_id,
-							text: webhookData.text || webhookData.message || webhookData.content,
-							userId: webhookData.userId || webhookData.user_id || webhookData.sender,
-							timestamp:
-								webhookData.timestamp || webhookData.created_at || new Date().toISOString(),
-							rawData: webhookData,
-						};
-					}
+				if (webhookData.cId === channelId) {
+					shouldTrigger = true;
+					outputData = { ...webhookData, eventType: 'messageReceived' };
 				}
 				break;
 
 			case 'botMention':
-				if (
-					webhookData.event === 'mention' ||
-					webhookData.type === 'mention' ||
-					webhookData.event === 'app_mention'
-				) {
-					shouldTrigger = true;
-					outputData = {
-						eventType: 'mention',
-						messageId: webhookData.messageId || webhookData.message_id || webhookData.id,
-						channelId: webhookData.channelId || webhookData.channel_id,
-						text: webhookData.text || webhookData.message || webhookData.content,
-						userId: webhookData.userId || webhookData.user_id || webhookData.sender,
-						timestamp: webhookData.timestamp || webhookData.created_at || new Date().toISOString(),
-						rawData: webhookData,
-					};
-				}
+				shouldTrigger = true;
+				outputData = { ...webhookData, eventType: 'botMention' };
 				break;
 
 			case 'reactionAdded':
-				if (
-					webhookData.event === 'reaction_added' ||
-					webhookData.type === 'reaction_added' ||
-					webhookData.event === 'reaction'
-				) {
-					shouldTrigger = true;
-					const item = webhookData.item as IDataObject | undefined;
-					outputData = {
-						eventType: 'reaction',
-						messageId: webhookData.messageId || webhookData.message_id || (item?.id as string),
-						channelId: webhookData.channelId || webhookData.channel_id || (item?.channel as string),
-						emoji: webhookData.emoji || webhookData.reaction,
-						userId: webhookData.userId || webhookData.user_id || webhookData.user,
-						timestamp: webhookData.timestamp || webhookData.created_at || new Date().toISOString(),
-						rawData: webhookData,
-					};
-				}
+				shouldTrigger = true;
+				outputData = { ...webhookData, eventType: 'reactionAdded' };
 				break;
 		}
 
