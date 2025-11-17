@@ -1,5 +1,4 @@
 import {
-	IconFile,
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -11,7 +10,7 @@ export class Pumble implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Pumble',
 		name: 'pumble',
-		icon: 'file:pumble.png' as unknown as IconFile,
+		icon: 'file:pumble.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'Interact with Pumble API',
