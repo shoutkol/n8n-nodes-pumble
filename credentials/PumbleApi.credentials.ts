@@ -10,9 +10,9 @@ export class PumbleApi implements ICredentialType {
 			displayName: 'Base URL',
 			name: 'baseUrl',
 			type: 'string',
-			default: 'http://localhost:5625',
+			default: 'https://pumble-application--shout-dev-2a776.asia-southeast1.hosted.app',
 			required: true,
-			placeholder: 'http://localhost:5625',
+			placeholder: 'https://pumble-application--shout-dev-2a776.asia-southeast1.hosted.app',
 			description: 'The base URL of the Pumble API server',
 		},
 	];
